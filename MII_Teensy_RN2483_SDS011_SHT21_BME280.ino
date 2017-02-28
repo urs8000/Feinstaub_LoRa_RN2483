@@ -77,10 +77,10 @@
 #include <Keys_prod_feinstaub_feinstaub_0002_RN2483.h>
 
 // output from "console"   --> Keys.....h
-String AppEUI  = "1234567890123456";
-String NwkSKey = "12345678901234567890123456789012";
-String AppSKey = "12345678901234567890123456789012";
-String addr    = "12345678";
+// String AppEUI  = "1234567890123456";
+// String NwkSKey = "12345678901234567890123456789012";
+// String AppSKey = "12345678901234567890123456789012";
+// String addr    = "12345678";
 // **********************************************************
 // ******   Above settinge have to be adopted !!! ***********
 // **********************************************************
@@ -152,8 +152,8 @@ int sds_pm25_sum  = 0;
 int sds_val_count = 0;
 
 // Kommands to start and stop SDS011     no longer used, because the module will be powered off
-// const byte stop_SDS_cmd[] = {0xFF, 0xAA, 0xB4, 0x06, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0x05, 0xAB};
-// const byte start_SDS_cmd[] = {0xAA, 0xB4, 0x06, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0x06, 0xAB};
+   const byte stop_SDS_cmd[] = {0xFF, 0xAA, 0xB4, 0x06, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0x05, 0xAB};
+   const byte start_SDS_cmd[] = {0xAA, 0xB4, 0x06, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0x06, 0xAB};
 #endif
 
 #if S_SHTxx == 1
@@ -523,7 +523,7 @@ void Batt_Voltage() {                                   // A9 (pin23)
   delay(100);
   sensorBattValue = adc->analogRead(readPin);           // read Battery
   DEBUG_PRT(sensorBattValue);
-  float voltageBatt = (sensorBattValue * 4.2/adc->getMaxValue(ADC_0));
+  float voltageBatt = (sensorBattValue * 3.6/adc->getMaxValue(ADC_0));
   voltageBatt_s = Float2String(voltageBatt);
   DEBUG_PLN("  V_Batt:  "+voltageBatt_s);
 }
@@ -657,22 +657,35 @@ void setup() {
 
 void loop() {
 	DEBUG_PLN("loop: Starting");
-
+    //  int cnt_loop  = 0;
+    //  int cnt_while = 0;
+    //  int cnt_if    = 0;
+    //  int cnt_read1 = 0;
+    //  int cnt_read2 = 0;
+    //  int cnt_sleep_long  = 0;
+    //  int cnt_sleep_short = 0;
+  
 // The do_send function puts a message in the queue and then puts
 // itself to sleep. When waking up, will again work on queue again.
 
-	
+    // DEBUG_PRT("loop "); DEBUG_PRT(cnt_loop); DEBUG_PLN(); cnt_loop++;
+  
 	while(1) {
 		act_milli = millis();			                           // read system-tick
+
+    // DEBUG_PRT("while "); DEBUG_PRT(cnt_while); DEBUG_PLN(); cnt_while++;
 
 		if((act_milli - prev_milli) >= SDS_SAMPLE_TIME) {    // after SAMPLE_TIME (==0 1sec)
 			prev_milli = act_milli;
 			timer_SDS += 1;			    	                         // Count SDS-Timer
+        // DEBUG_PRT("if "); DEBUG_PRT(cnt_if); DEBUG_PLN(); cnt_if++;
 			sensorSDS();			      		                       // check (and read)  SDS011		   returns result_SDS as string
 		}
 
     if ( SDSread == true )  {
+       // DEBUG_PRT("read 1 "); DEBUG_PRT(cnt_read1); DEBUG_PLN(); cnt_read1++;
      readSensors();                                       // Put job in run queue(send mydata buffer)
+       // DEBUG_PRT("read 2 "); DEBUG_PRT(cnt_read2); DEBUG_PLN(); cnt_read2++;
 
       led_on();
       ts1 = millis();
@@ -682,11 +695,22 @@ void loop() {
       DEBUG_PRT(ts2 - ts1);
       DEBUG_PRT(" millis");
       DEBUG_PLN();
+      // cnt_loop  = 0;
+      // cnt_while = 0;
+      // cnt_if    = 0;
+      // cnt_read1 = 0;
+      // cnt_read2 = 0;
+      // cnt_sleep_long  = 0;
+      // cnt_sleep_short = 0;      
       led_off();
+      Serial.flush();
+      delay(50);
 
     //------------------------------------------------------------
     // sleep longsleep (12) * Snooze   (12 * 10 Seconds)
     for ( int sleepcnt = 0; sleepcnt < longsleep; sleepcnt++ ) {
+        // DEBUG_PRT("sleep long "); DEBUG_PRT(cnt_sleep_long); DEBUG_PLN(); cnt_sleep_long++;
+        // delay(10000);
       who = Snooze.deepSleep( config_teensy32 );
     }
   
@@ -694,8 +718,12 @@ void loop() {
       // Now start SDS senor  and sleep again 10 Seconds
          digitalWrite(SDS_pwr, 1);                              // eneble pololu step-up module
          delay(50);
+         DEBUG_PLN("SDS start");
          serialSDS.write(start_SDS_cmd,sizeof(start_SDS_cmd));  // not really needed. it should start with default config
-         
+         // DEBUG_PRT("sleep short "); DEBUG_PRT(cnt_sleep_short); DEBUG_PLN(); cnt_sleep_short++;
+
+         // delay(10000);   
+      who = Snooze.deepSleep( config_teensy32 );                // return module that woke processor
       who = Snooze.deepSleep( config_teensy32 );                // return module that woke processor
 
 

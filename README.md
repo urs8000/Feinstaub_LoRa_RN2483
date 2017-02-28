@@ -11,3 +11,7 @@ LoRa Module:		RN2483		on breadboard
 LiPo step-up		pololu		Pololu 5V Step-Up Voltage Regulator U1V11F5
 LiPo Batteries		4 x 18650 parralel  (4 x 2500mA)
 
+### power measurement
+running:  130 - 170mA
+sleeping:   4mA
+
